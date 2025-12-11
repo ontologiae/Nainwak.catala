@@ -1,0 +1,138 @@
+# Code Catala pour une version hyper simplifiée du MMPORG Nainwak
+> Module Nainwak
+
+
+```catala-metadata
+# énumération = un Cote peut être l'un des 3, rien d'autre
+déclaration énumération Cote:
+  -- Brave
+  -- Sadique
+  -- Naindécis
+
+
+déclaration énumération TypeArme:
+	-- Snipe
+	-- Bourrin
+
+
+
+déclaration structure Carac:
+  donnée force        contenu entier   # PF
+  donnée precision    contenu entier   # PP
+  donnée intelligence contenu entier   # PI
+  donnée barbe        contenu entier  # longueur de la barbe (cm)
+  donnée pv          contenu entier   # Points de Vie actuels
+  donnée pv_max      contenu entier   # PV maximum
+  donnée pa          contenu entier   # Points d'Action disponibles
+  donnée xp          contenu entier   # Points d'expérience
+  donnée honor       contenu entier   # Points d'honneur
+  donnée points_cote contenu entier   # Points de côté (PC)
+  donnée ridicule    contenu entier   # Points de ridicule (PR)
+  donnée honte       contenu entier   # Points de honte (PH)
+  donnée encyclo    contenu entier    # Points d'encyclopédie
+
+déclaration structure Arme:
+  donnée coût_pa      contenu entier   # coût en PA pour l'utiliser
+  donnée portée        contenu entier   # portée (nombre de cases)
+  donnée base_dommage  contenu entier   # dommage de base
+  donnée recharge     contenu entier  # temps de recharge (jours)
+  donnée état_arme        contenu entier   # état de l'arme (0 = cassée)
+  donnée type_arme         contenu TypeArme
+
+déclaration structure Rune:
+  donnée delta_force       contenu entier
+  donnée delta_precision   contenu entier
+  donnée delta_vie         contenu entier
+  donnée delta_intelligence contenu entier
+
+déclaration structure Véhicule:
+  donnée id 	contenu entier   # ID unique du véhicule
+  donnée coût_pa_par_case contenu entier   # coût PA d'un déplacement d'une case
+  donnée état_vh             contenu entier   # état du véhicule
+  donnée peut_glisser_avec  contenu booléen 
+  donnée cout_a_lexplosion contenu entier   # coût en % quand il explose 
+  donnée cout_utilisation   contenu entier   # coût en % pour l'utiliser
+
+déclaration structure Détecteur:
+  donnée portée contenu entier   # portée de détection (unités : cases)
+
+déclaration structure Bouffe:
+  donnée heal  contenu entier   # points de vie restaurés
+
+déclaration structure Jouet:
+  donnée dummy contenu entier   # placeholder (pas d'effet défini)
+
+déclaration structure Inventaire:
+  donnée armes      contenu liste de Arme
+  donnée runes      contenu liste de Rune
+  donnée véhicule   contenu optionnel de Véhicule
+  donnée détecteur  contenu optionnel de Détecteur
+  donnée aliments   contenu liste de Bouffe
+  donnée inutiles   contenu liste de entier   # objets inutiles (ID)
+  donnée jouets     contenu liste de Jouet
+
+déclaration structure Personnage:
+  donnée id 	    contenu entier   # ID unique du nain
+  donnée carac      contenu Carac
+  donnée inventaire contenu Inventaire
+  #donnée target     contenu optionnel de entier   # ID du nain cible (si présent)
+  donnée x          contenu entier   # position x sur la carte	
+  donnée y          contenu entier   # position y sur la carte
+  donnée monde      contenu entier   # ID du monde actuel
+
+déclaration champ d'application Deplacement:
+  entrée personnage_in      contenu Personnage
+  entrée direction_x    contenu entier   # -1, 0, ou 1
+  entrée direction_y    contenu entier   # -1, 0, ou 1
+  interne deplacement_autorisé     contenu booléen
+  interne déplacement_à_pied   contenu booléen
+  interne cout_pa      contenu entier
+  résultat déplacement_possible condition
+  résultat personnage_out contenu Personnage
+```
+
+
+Définition du déplacement du joueur
+
+
+```catala
+champ d'application Deplacement:
+  étiquette pas_de_deplacement définition personnage_out égal à personnage_in # par défaut
+  # coût en PA selon la présence d'un véhicule 
+
+
+
+champ d'application Deplacement:
+
+ définition cout_pa égal à
+   selon (personnage_in.inventaire.véhicule) sous forme
+      -- Absent: 8
+      -- Présent contenu veh: veh.coût_pa_par_case
+
+ définition déplacement_à_pied égal à 
+    (personnage_in.inventaire.véhicule = Absent)
+ #TODO : gérer l'explosion
+
+ définition deplacement_autorisé égal à 
+    soit position_ok égal à 
+    (direction_x != 0 ou direction_y != 0) 
+	et ( personnage_in.x + direction_x <= 22 et personnage_in.x + direction_x >= 0) 
+	et (personnage_in.y + direction_y <= 8 et personnage_in.y + direction_y >= 0)
+    dans soit assez_pa égal à personnage_in.carac.pa >= cout_pa
+    dans  (assez_pa et position_ok)
+
+  étiquette deplacement_normal exception pas_de_deplacement définition personnage_out sous condition (deplacement_autorisé et déplacement_à_pied)
+	conséquence égal à 
+       		personnage_in mais en remplaçant {
+        		-- carac : personnage_in.carac mais en remplaçant { 
+									  -- pa : personnage_in.carac.pa - cout_pa }
+			-- x : personnage_in.x + direction_x 
+			-- y : personnage_in.y + direction_y
+     		}
+
+   
+
+   règle déplacement_possible sous condition deplacement_autorisé conséquence rempli  
+```
+
+

@@ -1,0 +1,55 @@
+> Usage de Nainwak
+
+
+```catala
+#[test]
+déclaration champ d'application TestNainwak1:
+  interne perso_initial contenu Nainwak.Personnage
+  résultat perso_apres_deplac_a_pied contenu Nainwak.Personnage
+
+
+champ d'application TestNainwak1:
+  définition perso_initial égal à 
+    #résultat de Nainwak.
+    Nainwak.Personnage  {
+      -- id : 1
+      -- carac :  Nainwak.Carac { 
+				-- force : 800
+				-- precision : 200
+				-- intelligence : 30
+				-- barbe : 207
+				-- pv_max : 100
+				-- xp : 15
+				-- honor : 5
+				-- points_cote : 10
+				-- ridicule	: 0
+				-- encyclo : 0
+				-- honte : 0
+				-- pa : 20
+			        -- pv : 100 
+				}
+      -- inventaire :  Nainwak.Inventaire { 	
+					-- armes : []
+					-- runes : []
+					-- véhicule : Absent 
+					-- détecteur : Absent
+					-- aliments : []
+					-- inutiles : []
+					-- jouets : []
+					}
+      -- x : 10
+      -- y : 5
+      -- monde : 1
+    }
+
+  définition perso_apres_deplac_a_pied égal à 
+	résultat de Nainwak.Deplacement avec {
+      		-- personnage_in  : perso_initial
+		-- direction_x : 1 # déplacement vers la droite
+		-- direction_y : 0
+	}
+
+    assertion (perso_apres_deplac_a_pied.x = 11)
+    assertion (perso_apres_deplac_a_pied.y = 5)
+    assertion (perso_apres_deplac_a_pied.carac.pa = 12)
+```
