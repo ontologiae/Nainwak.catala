@@ -50,7 +50,7 @@ déclaration structure Véhicule:
   donnée coût_pa_par_case contenu entier   # coût PA d'un déplacement d'une case
   donnée état_vh             contenu entier   # état du véhicule
   donnée peut_glisser_avec  contenu booléen 
-  donnée cout_a_lexplosion contenu entier   # coût en % quand il explose 
+  donnée cout_a_lexplosion contenu entier   # coût en PV quand il explose 
   donnée cout_utilisation   contenu entier   # coût en % pour l'utiliser
 
 déclaration structure Détecteur:
@@ -87,7 +87,10 @@ déclaration champ d'application Deplacement:
   interne deplacement_autorisé     contenu booléen
   interne déplacement_à_pied   contenu booléen
   interne cout_pa      contenu entier
+  interne a_explosé    contenu booléen
+  résultat est_mort    contenu booléen
   résultat déplacement_possible condition
+  résultat explosion    contenu (booléen, entier)
   résultat personnage_out contenu Personnage
 ```
 
@@ -113,6 +116,11 @@ champ d'application Deplacement:
     (personnage_in.inventaire.véhicule = Absent)
  #TODO : gérer l'explosion
 
+ définition explosion égal à 
+    selon (personnage_in.inventaire.véhicule) sous forme
+      -- Absent: (faux,0)
+      -- Présent contenu veh: ((veh.état_vh - veh.cout_utilisation <= 0),veh.cout_a_lexplosion)
+
  définition deplacement_autorisé égal à 
     soit position_ok égal à 
     (direction_x != 0 ou direction_y != 0) 
@@ -121,16 +129,95 @@ champ d'application Deplacement:
     dans soit assez_pa égal à personnage_in.carac.pa >= cout_pa
     dans  (assez_pa et position_ok)
 
-  étiquette deplacement_normal exception pas_de_deplacement définition personnage_out sous condition (deplacement_autorisé et déplacement_à_pied)
+  
+
+  # Cas déplacement à pied
+  étiquette cas_deplacement_à_pied exception pas_de_deplacement définition personnage_out sous condition (deplacement_autorisé et déplacement_à_pied)
 	conséquence égal à 
        		personnage_in mais en remplaçant {
         		-- carac : personnage_in.carac mais en remplaçant { 
-									  -- pa : personnage_in.carac.pa - cout_pa }
+									  -- pa : personnage_in.carac.pa - cout_pa 
+									  }
 			-- x : personnage_in.x + direction_x 
 			-- y : personnage_in.y + direction_y
      		}
 
+   définition a_explosé égal à 
+	soit (boom, dmg) égal à explosion 
+	dans boom
+
+
+   définition est_mort égal à
+	soit (boom, dmg) égal à explosion dans
+	(personnage_in.carac.pv - dmg <= 0)
+
+  # Cas déplacement avec véhicule
+   étiquette cas_deplacement_avec_véhicule exception cas_deplacement_à_pied
+	définition personnage_out sous condition (deplacement_autorisé et non déplacement_à_pied et non a_explosé et non est_mort)
+	conséquence égal à
+		soit x égal à #[debug.print = "cas_deplacement_avec_véhicule"] 0 dans
+		soit newvh égal à 
+		 selon (personnage_in.inventaire.véhicule) sous forme
+	 		-- Absent: personnage_in.inventaire.véhicule
+	 		-- Présent contenu veh: Présent contenu (veh mais en remplaçant {
+	      				-- état_vh : veh.état_vh - veh.cout_utilisation
+	      			})
+		dans
+		#soit (boom, dmg) = pas_d_explosion
+       		personnage_in mais en remplaçant {
+			-- carac : personnage_in.carac  mais en remplaçant { 
+									  -- pa : personnage_in.carac.pa - cout_pa 
+									}
+			-- x : personnage_in.x + direction_x 
+			-- y : personnage_in.y + direction_y
+			-- inventaire : personnage_in.inventaire mais en remplaçant {
+							-- véhicule : newvh
+     		 						}
+		}
+
+   étiquette explosion_vehicule_sans_mort exception cas_deplacement_avec_véhicule
+	définition personnage_out sous condition (deplacement_autorisé et a_explosé et non déplacement_à_pied et non est_mort)
+	conséquence égal à
+	soit x égal à #[debug.print = "explosion_vehicule_sans_mort"] 0 dans
+
+		 soit (explo,coupv) égal à explosion dans 
+       		 personnage_in mais en remplaçant {
+			-- carac : personnage_in.carac  mais en remplaçant { 
+									  -- pa : personnage_in.carac.pa - cout_pa
+									  -- pv : personnage_in.carac.pv - coupv
+									}
+			-- x : personnage_in.x + direction_x # le déplacement a quand même eu lieu...
+			-- y : personnage_in.y + direction_y
+			-- inventaire : personnage_in.inventaire mais en remplaçant {
+							-- véhicule : Absent # mais le véhicule a explosé
+     		 						}
+		}
+
+    étiquette  explosion_vehicule_avec_mort exception explosion_vehicule_sans_mort
+	définition personnage_out sous condition (deplacement_autorisé et non déplacement_à_pied et a_explosé et est_mort)
+	conséquence égal à
+	soit x égal à  #[debug.print = "explosion_vehicule_avec_mort"] 0 dans
+       		 personnage_in mais en remplaçant {
+			-- carac : personnage_in.carac  mais en remplaçant { 
+									  -- pa : personnage_in.carac.pa - cout_pa
+									  -- pv : personnage_in.carac.pv_max # le personnage meurt, il respawn avec ses PV max
+									  # nb mort + 1
+									  # On voiti ci les limites de Catala, faut MAJ les stats, ailleurs dans le jeu, respawn le nain, etc.
+									}
+			-- x : 0 # impossible, mais le moteur s'en occupera après
+			-- y : 0
+			-- inventaire : Inventaire { 	
+					-- armes : []
+					-- runes : []
+					-- véhicule : Absent
+					-- détecteur : Absent
+					-- aliments : []
+					-- inutiles : []
+					-- jouets : []
+					}
+     		 }
    
+
 
    règle déplacement_possible sous condition deplacement_autorisé conséquence rempli  
 ```

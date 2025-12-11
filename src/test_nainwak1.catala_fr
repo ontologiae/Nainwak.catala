@@ -63,7 +63,7 @@ champ d'application TestNainwak1:
 #[test]
 déclaration champ d'application TestNainwak2:
   interne perso_initial contenu Nainwak.Personnage
-  résultat perso_apres_deplac_a_pied contenu Nainwak.Deplacement
+  résultat perso_apres_deplac_avec_vh contenu Nainwak.Deplacement
 
 
 champ d'application TestNainwak2:
@@ -107,15 +107,158 @@ champ d'application TestNainwak2:
       -- monde : 1
     }
 
-  définition perso_apres_deplac_a_pied égal à 
+  définition perso_apres_deplac_avec_vh égal à 
 	résultat de Nainwak.Deplacement avec {
       		-- personnage_in  : perso_initial
 		-- direction_x : 1 # déplacement vers la droite
 		-- direction_y : 0
 	}
 
-    assertion (perso_apres_deplac_a_pied.personnage_out.x = 11)
-    assertion (perso_apres_deplac_a_pied.personnage_out.y = 5)
-    assertion (perso_apres_deplac_a_pied.personnage_out.carac.pa = 18)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.x = 11)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.y = 5)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.carac.pa = 18)
+
+
+
+
+#[test]
+déclaration champ d'application TestNainwakExplosionVhSansMort:
+  interne perso_initial contenu Nainwak.Personnage
+  résultat perso_apres_deplac_avec_vh contenu Nainwak.Deplacement
+
+
+champ d'application TestNainwakExplosionVhSansMort:
+  définition perso_initial égal à 
+    #résultat de Nainwak.
+    Nainwak.Personnage  {
+      -- id : 1
+      -- carac :  Nainwak.Carac { 
+				-- force : 800
+				-- precision : 200
+				-- intelligence : 30
+				-- barbe : 207
+				-- pv_max : 100
+				-- xp : 15
+				-- honor : 5
+				-- points_cote : 10
+				-- ridicule	: 0
+				-- encyclo : 0
+				-- honte : 0
+				-- pa : 20
+			        -- pv : 100 
+				}
+      -- inventaire :  Nainwak.Inventaire { 	
+					-- armes : []
+					-- runes : []
+					-- véhicule : Présent contenu Nainwak.Véhicule {
+						-- id : 1 # Capilo
+						-- coût_pa_par_case : 2
+						-- état_vh : 10
+						-- peut_glisser_avec : faux
+						-- cout_a_lexplosion : 50
+						-- cout_utilisation : 10
+					    } 
+					-- détecteur : Absent
+					-- aliments : []
+					-- inutiles : []
+					-- jouets : []
+					}
+      -- x : 10
+      -- y : 5
+      -- monde : 1
+    }
+
+  définition perso_apres_deplac_avec_vh égal à 
+	résultat de Nainwak.Deplacement avec {
+      		-- personnage_in  : perso_initial
+		-- direction_x : 1 # déplacement vers la droite
+		-- direction_y : 0
+	}
+
+    assertion (perso_apres_deplac_avec_vh.personnage_out.x = 11)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.y = 5)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.carac.pa = 18)
+  #TODO verif que VH a disparu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#[test]
+déclaration champ d'application TestNainwakExplosionVhAvecMort:
+  interne perso_initial contenu Nainwak.Personnage
+  résultat perso_apres_deplac_avec_vh contenu Nainwak.Deplacement
+
+
+champ d'application TestNainwakExplosionVhAvecMort:
+  définition perso_initial égal à 
+    #résultat de Nainwak.
+    Nainwak.Personnage  {
+      -- id : 1
+      -- carac :  Nainwak.Carac { 
+				-- force : 800
+				-- precision : 200
+				-- intelligence : 30
+				-- barbe : 207
+				-- pv_max : 100
+				-- xp : 15
+				-- honor : 5
+				-- points_cote : 10
+				-- ridicule	: 0
+				-- encyclo : 0
+				-- honte : 0
+				-- pa : 20
+			        -- pv : 100 
+				}
+      -- inventaire :  Nainwak.Inventaire { 	
+					-- armes : []
+					-- runes : []
+					-- véhicule : Présent contenu Nainwak.Véhicule {
+						-- id : 1 # Capilo
+						-- coût_pa_par_case : 2
+						-- état_vh : 10
+						-- peut_glisser_avec : faux
+						-- cout_a_lexplosion : 500
+						-- cout_utilisation : 10
+					    } 
+					-- détecteur : Absent
+					-- aliments : []
+					-- inutiles : []
+					-- jouets : []
+					}
+      -- x : 10
+      -- y : 5
+      -- monde : 1
+    }
+
+  définition perso_apres_deplac_avec_vh égal à 
+	résultat de Nainwak.Deplacement avec {
+      		-- personnage_in  : perso_initial
+		-- direction_x : 1 # déplacement vers la droite
+		-- direction_y : 0
+	}
+
+    assertion (perso_apres_deplac_avec_vh.personnage_out.x = 0)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.y = 0)
+    assertion (perso_apres_deplac_avec_vh.personnage_out.carac.pa = 18)
+
 
 ```
